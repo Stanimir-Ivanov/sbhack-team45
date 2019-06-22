@@ -1,20 +1,27 @@
-pragma solidity 0.5.9;
+pragma solidity 0.5.8;
 
 contract PaymentManager {
 
+    address owner;
+
     struct User {
-        address referenceAddress;
+        address payable referenceAddress;
         uint256 balance;
     }
 
     struct Provider {
-        address referenceAddress;
+        address payable referenceAddress;
         uint256 balance;
         uint256 cost;
     }
 
     mapping(address => User) public usersData;
+    address[] public users;
+    uint256 totalUsers;
+
     mapping(address => Provider) public providersData;
+    address[] public providers;
+    uint256 totalProviders;
 
     modifier userSignedUp(address sender){
         require(usersData[sender].referenceAddress != address(0),
@@ -40,26 +47,43 @@ contract PaymentManager {
         _;
     }
 
-    constructor() public {
+    modifier isOwner(address sender){
+        require(sender==owner,
+        "Only the contract owner may call this function");
+        _;
+    }
 
+    constructor() public {
+        owner = msg.sender;
+        totalUsers = 0;
+        totalProviders = 0;
     }
 
     // Adding user's address to global array
     function userSignup() public userNotSignedUp(msg.sender) {
         usersData[msg.sender].referenceAddress = msg.sender;
         usersData[msg.sender].balance = 0;
+        totalUsers++;
     }
 
     // Same but for the provider
-    function providerSignUp(uint256 cost) public providerNotSignedUp(msg.sender)  {
+    function providerSignUp(uint256 cost) public providerNotSignedUp(msg.sender) {
         providersData[msg.sender].referenceAddress = msg.sender;
         providersData[msg.sender].balance = 0;
         providersData[msg.sender].cost = cost;
+        totalProviders++;
     }
     
     // Top up
-    function userTopUp() public payable userSignedUp(msg.sender) {
+    function userTopUp() public userSignedUp(msg.sender) payable {
         usersData[msg.sender].balance += msg.value;
+    }
+
+    function userWithdraw(uint256 value) public userSignedUp(msg.sender) payable {
+        if(usersData[msg.sender].balance >= value){
+            usersData[msg.sender].balance -= value;
+            msg.sender.transfer(value);
+        }
     }
 
     // Provider gets his money
@@ -70,17 +94,25 @@ contract PaymentManager {
         }
     }
 
+    // Send all outstanding balances to providers
+    function sendAllProviderBalances() public isOwner(msg.sender) payable {
+        for(uint256 i = 0; i < totalUsers; i++){
+            providersData[providers[i]].referenceAddress.transfer(providersData[providers[i]].balance);
+            providersData[providers[i]].balance = 0;
+        }
+    }
+
     // Update the balances for both users and providers
     function userPayForTrip(address providerAddress) public userSignedUp(msg.sender) providerSignedUp(providerAddress) {
         providersData[providerAddress].balance += providersData[providerAddress].cost;
         usersData[msg.sender].balance -= providersData[providerAddress].cost;
     }
 
-    function getUserBalance() public userSignedUp(msg.sender) returns (uint256 ret) {
+    function getUserBalance() public view userSignedUp(msg.sender) returns (uint256 ret) {
         return usersData[msg.sender].balance;
     }
 
-    function getProviderBalance() public providerSignedUp(msg.sender) returns (uint256 ret) {
+    function getProviderBalance() public view providerSignedUp(msg.sender) returns (uint256 ret) {
         return providersData[msg.sender].balance;
     }
 
@@ -88,10 +120,8 @@ contract PaymentManager {
         providersData[msg.sender].cost = cost;
     }
 
-    function getProviderCost() public providerSignedUp(msg.sender) returns (uint256 ret) {
+    function getProviderCost() public view providerSignedUp(msg.sender) returns (uint256 ret) {
         return providersData[msg.sender].cost;
     }
-
-
 
 }
