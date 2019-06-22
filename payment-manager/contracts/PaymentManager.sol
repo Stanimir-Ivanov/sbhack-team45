@@ -11,6 +11,7 @@ contract PaymentManager {
 
     struct Provider {
         address payable referenceAddress;
+        string name;
         uint256 balance;
         uint256 cost;
     }
@@ -67,10 +68,11 @@ contract PaymentManager {
     }
 
     // Same but for the provider
-    function providerSignUp(uint256 cost) public providerNotSignedUp(msg.sender) {
+    function providerSignUp(uint256 cost, string memory name) public providerNotSignedUp(msg.sender) {
         providersData[msg.sender].referenceAddress = msg.sender;
         providersData[msg.sender].balance = 0;
         providersData[msg.sender].cost = cost;
+        providersData[msg.sender].name = name;
         totalProviders++;
     }
     
@@ -122,6 +124,11 @@ contract PaymentManager {
 
     function getProviderCost() public view providerSignedUp(msg.sender) returns (uint256 ret) {
         return providersData[msg.sender].cost;
+    }
+
+    function getProviderData(address providerAddress) public view providerSignedUp(msg.sender) returns (string memory name, uint256 cost) {
+        name = providersData[providerAddress].name;
+        cost = providersData[providerAddress].cost;
     }
 
 }
