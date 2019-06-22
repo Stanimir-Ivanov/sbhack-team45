@@ -1,37 +1,67 @@
 <ion-header>
-  </ion-header>
-  
-  <ion-content>
-      <div class="ion-padding">
+</ion-header>
+
+<ion-content>
+  <div class="ion-padding">
     <ion-grid>
       <ion-row>
         <ion-col>
-          <ion-button fill="clear" expand="full"><b>Deposit</b></ion-button>
+          <ion-button (click)="deposit = true;" fill="clear" color="{{!deposit ? 'secondary' : ''}}" expand="full"
+            [style.fontWeight]="deposit ? 'bold' : 'normal'">
+            Deposit
+          </ion-button>
         </ion-col>
         <ion-col>
-  
-          <ion-button fill="clear" expand="full" color="secondary">Withdraw</ion-button>
+
+          <ion-button (click)="deposit = false;" fill="clear" expand="full" color="{{!deposit ? '' : 'secondary'}}"
+            [style.fontWeight]="!deposit ? 'bold' : 'normal'">
+            Withdraw
+          </ion-button>
         </ion-col>
       </ion-row>
     </ion-grid>
     <ion-card style="background-color: #333">
-        <ion-card-header>
-          <ion-card-subtitle>Current Balance</ion-card-subtitle>
-          <ion-card-title>4.82 ETH</ion-card-title>
-        </ion-card-header>
-      </ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Current Balance</ion-card-subtitle>
+        <ion-card-title>4.82 ETH</ion-card-title>
+      </ion-card-header>
+    </ion-card>
+    <div *ngIf="deposit">
       <ion-card>
         <ion-card-content>
           <p>
-          Deposit to the address</p><p>
+            Deposit to the address</p>
+          <p>
             <ion-textarea disabled value="0x1093fc997da3728539cbaa767ae1a28ad4fce32e">
-                
+
             </ion-textarea>
-        </p>
-        <div>
+          </p>
+          <div>
             <img src="assets/qr.png" style="width: 200px">
-        </div>
+          </div>
         </ion-card-content>
       </ion-card>
-      </div>
-  </ion-content>
+    </div>
+    <div *ngIf="!deposit">
+      <ion-list>
+        <ion-item>
+            <ion-note slot="start">Address</ion-note>
+          
+          <ion-input placeholder="0x..."></ion-input>
+
+        </ion-item>
+        <ion-item>
+            <ion-note slot="start">ETH</ion-note>
+          <ion-input placeholder="Amount" type="number" [(ngModel)]="amount"></ion-input>
+
+        </ion-item>
+        <ion-item>
+            <ion-note slot="start">USD</ion-note>
+          {{ amount * 312.5 }}
+          </ion-item>
+      </ion-list>
+      <ion-button expand="block" style="color: #333">Confirm Withdrawal</ion-button>
+
+    </div>
+  </div>
+</ion-content>

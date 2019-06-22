@@ -7,6 +7,10 @@ import { Component } from '@angular/core';
 })
 export class Tab3Page {
 
+  deposit: boolean = true;
+
+  amount: number = 0;
+
   constructor() {}
 
 }
