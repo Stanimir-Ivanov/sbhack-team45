@@ -1,12 +1,19 @@
 import json
 import math
 from flask import Flask, request
-from solc import compile_standard
+from hexbytes import HexBytes
 from web3 import Web3
 from web3.auto import w3
 from eth_account import Account
 import argparse
 from flask_cors import CORS
+
+
+class HexJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, HexBytes):
+            return obj.hex()
+        return super().default(obj)
 
 
 class PaymentManager:
@@ -40,8 +47,13 @@ class PaymentManager:
                     Account.privateKeyToAccount(self.private_key).address
                 hash = self.contract.functions.userSignup().transact()
                 # Wait for transaction to be mined...
-                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return True
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -59,8 +71,13 @@ class PaymentManager:
                     Account.privateKeyToAccount(self.private_key).address
                 hash = self.contract.functions.providerSignUp(int(float(cost)*math.pow(10, 18)) ).transact()
                 # Wait for transaction to be mined...
-                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return True
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -76,13 +93,20 @@ class PaymentManager:
             if self.utils.get_provider().isConnected():
                 self.utils.get_provider().eth.defaultAccount = \
                     Account.privateKeyToAccount(self.private_key).address
-                self.contract.functions.userTopUp().transact(
+                hash = self.contract.functions.userTopUp().transact(
                     {
                         'from': self.utils.get_provider().eth.defaultAccount,
                         'value': int(float(amount)*math.pow(10, 18))  # Converts to wei
                     }
                 )
-                return True
+                # Wait for transaction to be mined...
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -100,8 +124,13 @@ class PaymentManager:
                     Account.privateKeyToAccount(self.private_key).address
                 hash = self.contract.functions.providerWithdraw(int(float(amount)*math.pow(10, 18)) ).transact()
                 # Wait for transaction to be mined...
-                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return True
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -120,8 +149,13 @@ class PaymentManager:
                     Account.privateKeyToAccount(self.private_key).address
                 hash = self.contract.functions.sendAllProviderBalances().transact()
                 # Wait for transaction to be mined...
-                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return True
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -139,8 +173,13 @@ class PaymentManager:
                     Account.privateKeyToAccount(self.private_key).address
                 hash = self.contract.functions.userWithdraw(int(float(amount)*math.pow(10, 18)) ).transact()
                 # Wait for transaction to be mined...
-                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return True
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -158,8 +197,13 @@ class PaymentManager:
                     Account.privateKeyToAccount(self.private_key).address
                 hash = self.contract.functions.userPayForTrip(to_provider).transact()
                 # Wait for transaction to be mined...
-                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return True
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -214,14 +258,22 @@ class PaymentManager:
             if self.utils.get_provider().isConnected():
                 self.utils.get_provider().eth.defaultAccount = \
                     Account.privateKeyToAccount(self.private_key).address
-                hash = self.contract.functions.setProviderCost(int(float(cost)*math.pow(10, 18)) ).transact()
+                hash = self.contract.functions.setProviderCost(int(float(cost)*math.pow(10, 18))).transact()
                 # Wait for transaction to be mined...
-                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return True
+                tx_json = json.dumps(
+                    dict(
+                        self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                    ),
+                    cls=HexJsonEncoder
+                )
+                return tx_json
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
             return False
+
+    def get_history(self):
+        return self.map[self.private_key]
 
 
 class Utils:
@@ -285,8 +337,9 @@ def user_sign_up():
     Signs up a user to the contract
     :return: 200 if OK, 500 if error
     """
-    if payment_manager_contract.signup_user():
-        return json.dumps({'Response': '200 - OK'})
+    transaction = payment_manager_contract.signup_user()
+    if transaction is not None:
+        return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
     else:
         return json.dumps({'Response': '500- Internal Server Error'})
 
@@ -300,8 +353,9 @@ def provider_sign_up():
 
     cost = request.args.get('cost')
     if cost is not None:
-        if payment_manager_contract.signup_provider(cost):
-            return json.dumps({'Response': '200 - OK'})
+        transaction = payment_manager_contract.signup_provider(cost)
+        if transaction is not None:
+            return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
         else:
             return json.dumps({'Response': '500- Internal Server Error'})
     else:
@@ -316,8 +370,9 @@ def top_up():
 
     amount = request.args.get('amount')
     if amount is not None:
-        if payment_manager_contract.top_up(amount):
-            return json.dumps({'Response': '200 - OK'})
+        transaction = payment_manager_contract.top_up(amount)
+        if transaction is not None:
+            return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
         else:
             return json.dumps({'Response': '500- Internal Server Error'})
     else:
@@ -332,8 +387,9 @@ def withdraw_provider():
 
     amount = request.args.get('amount')
     if amount is not None:
-        if payment_manager_contract.withdraw_provider(amount):
-            return json.dumps({'Response': '200 - OK'})
+        transaction = payment_manager_contract.withdraw_provider(amount)
+        if transaction is not None:
+            return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
         else:
             return json.dumps({'Response': '500- Internal Server Error'})
     else:
@@ -345,8 +401,9 @@ def send_all_provider_balances():
     """
     Send all the funds to all the providers
     """
-    if payment_manager_contract.send_all_provider_balances():
-        return json.dumps({'Response': '200 - OK'})
+    transaction = payment_manager_contract.send_all_provider_balances()
+    if transaction is not None:
+        return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
     else:
         return json.dumps({'Response': '500- Internal Server Error'})
 
@@ -359,8 +416,9 @@ def withdraw_user():
 
     amount = request.args.get('amount')
     if amount is not None:
-        if payment_manager_contract.withdraw_user(amount):
-            return json.dumps({'Response': '200 - OK'})
+        transaction = payment_manager_contract.withdraw_user(amount)
+        if transaction is not None:
+            return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
         else:
             return json.dumps({'Response': '500- Internal Server Error'})
     else:
@@ -375,8 +433,9 @@ def pay():
 
     to_provider = request.args.get('to')
     if to_provider is not None:
-        if payment_manager_contract.pay(to_provider):
-            return json.dumps({'Response': '200 - OK'})
+        transaction = payment_manager_contract.pay(to_provider)
+        if transaction is not None:
+            return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
         else:
             return json.dumps({'Response': '500- Internal Server Error'})
     else:
@@ -430,8 +489,9 @@ def set_cost_provider():
 
     cost = request.args.get('cost')
     if cost is not None:
-        if payment_manager_contract.set_cost_provider(cost):
-            return json.dumps({'Response': '200 - OK'})
+        transaction = payment_manager_contract.set_cost_provider(cost)
+        if transaction is not None:
+            return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
         else:
             return json.dumps({'Response': '500- Internal Server Error'})
     else:
