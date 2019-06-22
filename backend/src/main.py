@@ -5,6 +5,7 @@ from solc import compile_standard
 from web3 import Web3
 from web3.auto import w3
 from eth_account import Account
+import argparse
 
 
 class PaymentManager:
@@ -77,7 +78,7 @@ class PaymentManager:
                 self.contract.functions.userTopUp().transact(
                     {
                         'from': self.utils.get_provider().eth.defaultAccount,
-                        'value': amount
+                        'value': w3.fromWei(amount, 'ether')
                     }
                 )
                 return True
@@ -126,7 +127,7 @@ class PaymentManager:
         Allows a user to withdraw money
         :param amount: the amount to withdraw
         """
-        
+
         try:
             if self.utils.get_provider().isConnected():
                 self.contract.functions.userWithdraw(amount).call()
@@ -244,28 +245,6 @@ class Utils:
 
         return self.w3.isConnected()
 
-    @staticmethod
-    def get_contract_interface(source, contractName):
-        """
-        Compiles solidity contract and return an interface to it
-        :param source: the contract source code in .sol
-        :param contractName: the contract name
-        :return: its compiled version
-        """
-
-        compiled = compile_standard({
-            "language": "Solidity",
-            "sources": {
-                "0": {
-                    "content": source
-                }
-            },
-            "settings": {
-                "outputSelection": {"*": {"*": ["*"], "": ["*"]}}
-            }
-        })
-        return compiled["contracts"]["0"][contractName]
-
     def get_provider(self):
         """
         :return: this instance's provider
@@ -281,22 +260,6 @@ class Utils:
 
         return self.w3.eth.contract(address=address, abi=abi)
 
-
-#####################
-# Contracts and utils definitions
-#####################
-
-# Read contract source and instantiate a util object to interact with the contract
-with open('../../payment-manager/build/contracts/PaymentManager.json', 'r') as json_file:
-    contract_interface = json.load(json_file)
-
-payment_manager_contract = PaymentManager(
-    provider='http://127.0.0.1:7545',
-    contract_interface=contract_interface,
-    # contract_name="PaymentManager",
-    contract_address="0x9F69E1c70c0d3616d78A2386056a8D8615C4ad90",
-    private_key="fca1e2bfaff46a184e923a7db0937310cb267386f25b458c70c540fa7bc9472e"
-)
 
 ######################
 # API endpoint - routes
@@ -337,6 +300,10 @@ def provider_sign_up():
 
 @app.route('/api/topup')
 def top_up():
+    """
+    Add money to the user's wallet
+    """
+
     amount = request.args.get('amount')
     if amount is not None:
         if payment_manager_contract.top_up(amount):
@@ -349,6 +316,10 @@ def top_up():
 
 @app.route('/api/withdrawProvider')
 def withdraw_provider():
+    """
+    Let the provider withdraw his funds
+    """
+
     amount = request.args.get('amount')
     if amount is not None:
         if payment_manager_contract.withdraw_provider(amount):
@@ -358,15 +329,25 @@ def withdraw_provider():
     else:
         return json.dumps({'Response': '400-Bad Request'})
 
+
 @app.route('/api/sendAllProviderBalances')
-def send_all_provider_balances():    
+def send_all_provider_balances():
+    """
+    Send all the funds to all the providers
+    """
+
     if payment_manager_contract.send_all_provider_balances():
         return json.dumps({'Response': '200 - OK'})
     else:
         return json.dumps({'Response': '500- Internal Server Error'})
-    
+
+
 @app.route('/api/withdrawUser')
 def withdraw_user():
+    """
+    Let the user withdraw his funds
+    """
+
     amount = request.args.get('amount')
     if amount is not None:
         if payment_manager_contract.withdraw_user(amount):
@@ -379,6 +360,10 @@ def withdraw_user():
 
 @app.route('/api/pay')
 def pay():
+    """
+    Let the user pay some tokens to a given provider
+    """
+
     to_provider = request.args.get('to')
     if to_provider is not None:
         if payment_manager_contract.pay(to_provider):
@@ -391,6 +376,10 @@ def pay():
 
 @app.route('/api/getBalanceUser')
 def get_balance_user():
+    """
+    :return: the user's balance
+    """
+
     balance = payment_manager_contract.get_balance_user()
     if balance is not None:
         return json.dumps({'Response': '200 - OK', 'Data:': str(balance)})
@@ -400,6 +389,10 @@ def get_balance_user():
 
 @app.route('/api/getBalanceProvider')
 def get_balance_provider():
+    """
+    :return: the provider's balance
+    """
+
     balance = payment_manager_contract.get_balance_provider()
     if balance is not None:
         return json.dumps({'Response': '200 - OK', 'Data:': str(balance)})
@@ -409,6 +402,10 @@ def get_balance_provider():
 
 @app.route('/api/getCostProvider')
 def get_cost_provider():
+    """
+    :return: the provider's cost
+    """
+
     cost = payment_manager_contract.get_cost_provider()
     if cost is not None:
         return json.dumps({'Response': '200 - OK', 'Data:': str(cost)})
@@ -418,6 +415,10 @@ def get_cost_provider():
 
 @app.route('/api/setCostProvider')
 def set_cost_provider():
+    """
+    Change the provider's cost
+    """
+
     cost = request.args.get('cost')
     if cost is not None:
         return json.dumps({'Response': '200 - OK', 'Data:': str(cost)})
@@ -426,4 +427,22 @@ def set_cost_provider():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--provider_address", help="IP:Port address of the blockchain node")
+    parser.add_argument("--contract_address", help="The address of PaymentManager contract on the node")
+    parser.add_argument("--private_key", help="The private key of the user, to sign transactions")
+    args = parser.parse_args()
+
+    # Read contract source and instantiate a contract object to interact with the contract
+    with open('../../payment-manager/build/contracts/PaymentManager.json', 'r') as json_file:
+        contract_interface = json.load(json_file)
+
+    payment_manager_contract = PaymentManager(
+        provider=args.provider_address,
+        contract_interface=contract_interface,
+        contract_address=args.contract_address,
+        private_key=args.private_key
+    )
+
+    # Run the app on public IP
+    app.run(debug=True, host='0.0.0.0')
