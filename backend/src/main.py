@@ -6,6 +6,7 @@ from web3 import Web3
 from web3.auto import w3
 from eth_account import Account
 import argparse
+from flask_cors import CORS
 
 
 class PaymentManager:
@@ -267,6 +268,7 @@ class Utils:
 
 # Create the application instance
 app = Flask(__name__, template_folder="templates")
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 
 @app.route('/api/user_signup')
@@ -382,7 +384,7 @@ def get_balance_user():
 
     balance = payment_manager_contract.get_balance_user()
     if balance is not None:
-        return json.dumps({'Response': '200 - OK', 'Data:': str(balance)})
+        return json.dumps({'Response': '200 - OK', 'Data': str(balance)})
     else:
         return json.dumps({'Response': '500- Internal Server Error'})
 
@@ -395,7 +397,7 @@ def get_balance_provider():
 
     balance = payment_manager_contract.get_balance_provider()
     if balance is not None:
-        return json.dumps({'Response': '200 - OK', 'Data:': str(balance)})
+        return json.dumps({'Response': '200 - OK', 'Data': str(balance)})
     else:
         return json.dumps({'Response': '500- Internal Server Error'})
 
@@ -408,7 +410,7 @@ def get_cost_provider():
 
     cost = payment_manager_contract.get_cost_provider()
     if cost is not None:
-        return json.dumps({'Response': '200 - OK', 'Data:': str(cost)})
+        return json.dumps({'Response': '200 - OK', 'Data': str(cost)})
     else:
         return json.dumps({'Response': '500- Internal Server Error'})
 
@@ -421,7 +423,7 @@ def set_cost_provider():
 
     cost = request.args.get('cost')
     if cost is not None:
-        return json.dumps({'Response': '200 - OK', 'Data:': str(cost)})
+        return json.dumps({'Response': '200 - OK', 'Data': str(cost)})
     else:
         return json.dumps({'Response': '400-Bad Request'})
 
