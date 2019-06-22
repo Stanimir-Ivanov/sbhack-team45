@@ -76,20 +76,20 @@ contract PaymentManager {
         usersData[msg.sender].balance -= providersData[providerAddress].cost;
     }
 
-    function getUserBalance(address userAddress) public userSignedUp(userAddress) {
-        return usersData[userAddress].balance;
+    function getUserBalance() public userSignedUp(msg.sender) returns (uint256 ret) {
+        return usersData[msg.sender].balance;
     }
 
-    function getProviderBalance(address providerAddress) public providerSignedUp(providerAddress) {
-        return providersData[providerAddress].balance;
+    function getProviderBalance() public providerSignedUp(msg.sender) returns (uint256 ret) {
+        return providersData[msg.sender].balance;
     }
 
     function setProviderCost(uint256 cost) public providerSignedUp(msg.sender) {
         providersData[msg.sender].cost = cost;
     }
 
-    function getProviderCost(address providerAddress) public providerSignedUp(providerAddress) {
-        return providersData[providerAddress].cost;
+    function getProviderCost() public providerSignedUp(msg.sender) returns (uint256 ret) {
+        return providersData[msg.sender].cost;
     }
 
 

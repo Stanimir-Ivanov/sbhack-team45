@@ -1,3 +1,5 @@
+import json
+
 from flask import Flask, request
 
 #####################
@@ -14,8 +16,8 @@ payment_manager_contract = PaymentManager(
     provider='http://3.120.6.183:8545',
     contract_source=payment_manager,
     contract_name="PaymentManager",
-    contract_address="0xD6c476Ac63b4CA433fA1B9310f1D50b8D44AE571",
-    private_key="0xf92be558b1dea9591078c452b9b215c8a088e80523a3c2ce50c10e3c96de2461"
+    contract_address="0xd452931B197DbbB3c43449d79af70935f4392184",
+    private_key="0xcfdb0d6051e83a4c1526f391a86db05b274ff0e5e7617f20fc9f35730fc36435"
 )
 
 ######################
@@ -27,12 +29,12 @@ app = Flask(__name__, template_folder="templates")
 
 
 @app.route('/api/user_signup')
-def sign_up():
+def user_sign_up():
     return payment_manager_contract.signup_user()
 
 
 @app.route('/api/provider_signup')
-def sign_up():
+def provider_sign_up():
     cost = request.args.get('cost')
     if cost is not None:
         return payment_manager_contract.signup_provider(cost)
@@ -86,7 +88,7 @@ def get_balance_provider():
 
 
 @app.route('/api/getCostProvider')
-def get_balance_provider():
+def get_cost_provider():
     addr = request.args.get('addr')
     if addr is not None:
         return payment_manager_contract.get_cost_provider(addr)
@@ -95,7 +97,7 @@ def get_balance_provider():
 
 
 @app.route('/api/setCostProvider')
-def get_balance_provider():
+def set_cost_provider():
     cost = request.args.get('cost')
     if cost is not None:
         return payment_manager_contract.set_cost_provider(cost)
