@@ -15,9 +15,13 @@ export class Tab3Page {
   balance = 0;
 
   constructor(public http: HttpClient) {
-    http.get<any>('http://3.120.6.183:5000/api/getBalanceUser').subscribe(r => {
+  }
+
+  ionViewWillEnter() {
+    this.http.get<any>('http://3.120.6.183:5000/api/getBalanceUser').subscribe(r => {
       this.balance = r.Data;
     });
+
   }
 
 }
