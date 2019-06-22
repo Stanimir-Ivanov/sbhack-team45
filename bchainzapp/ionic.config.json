@@ -1,5 +1,8 @@
 {
   "name": "tescht",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {},
+    "cordova": {}
+  },
   "type": "angular"
 }

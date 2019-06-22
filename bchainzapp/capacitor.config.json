@@ -1,0 +1,7 @@
+{
+  "appId": "com.mobilipay.starter",
+  "appName": "tescht",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www"
+}
