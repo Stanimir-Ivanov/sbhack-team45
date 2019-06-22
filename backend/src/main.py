@@ -57,7 +57,7 @@ class PaymentManager:
             if self.utils.get_provider().isConnected():
                 self.utils.get_provider().eth.defaultAccount = \
                     Account.privateKeyToAccount(self.private_key).address
-                hash = self.contract.functions.providerSignUp(cost).transact()
+                hash = self.contract.functions.providerSignUp(int(float(cost)*math.pow(10, 18)) ).transact()
                 # Wait for transaction to be mined...
                 self.utils.get_provider().eth.waitForTransactionReceipt(hash)
                 return True
@@ -96,7 +96,11 @@ class PaymentManager:
 
         try:
             if self.utils.get_provider().isConnected():
-                self.contract.functions.providerWithdraw(amount).call()
+                self.utils.get_provider().eth.defaultAccount = \
+                    Account.privateKeyToAccount(self.private_key).address
+                hash = self.contract.functions.providerWithdraw(int(float(amount)*math.pow(10, 18)) ).transact()
+                # Wait for transaction to be mined...
+                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
                 return True
             else:
                 raise Warning("Couldn't connect to the provider")
@@ -131,7 +135,11 @@ class PaymentManager:
 
         try:
             if self.utils.get_provider().isConnected():
-                self.contract.functions.userWithdraw(amount).call()
+                self.utils.get_provider().eth.defaultAccount = \
+                    Account.privateKeyToAccount(self.private_key).address
+                hash = self.contract.functions.userWithdraw(int(float(amount)*math.pow(10, 18)) ).transact()
+                # Wait for transaction to be mined...
+                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
                 return True
             else:
                 raise Warning("Couldn't connect to the provider")
@@ -190,7 +198,7 @@ class PaymentManager:
 
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getProviderCost().call()
+                return self.contract.functions.getProviderCost().call() / math.pow(10, 18)
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -206,7 +214,7 @@ class PaymentManager:
             if self.utils.get_provider().isConnected():
                 self.utils.get_provider().eth.defaultAccount = \
                     Account.privateKeyToAccount(self.private_key).address
-                hash = self.contract.functions.setProviderCost(cost).transact()
+                hash = self.contract.functions.setProviderCost(int(float(cost)*math.pow(10, 18)) ).transact()
                 # Wait for transaction to be mined...
                 self.utils.get_provider().eth.waitForTransactionReceipt(hash)
                 return True
@@ -337,7 +345,6 @@ def send_all_provider_balances():
     """
     Send all the funds to all the providers
     """
-
     if payment_manager_contract.send_all_provider_balances():
         return json.dumps({'Response': '200 - OK'})
     else:
@@ -423,7 +430,10 @@ def set_cost_provider():
 
     cost = request.args.get('cost')
     if cost is not None:
-        return json.dumps({'Response': '200 - OK', 'Data': str(cost)})
+        if payment_manager_contract.set_cost_provider(cost):
+            return json.dumps({'Response': '200 - OK'})
+        else:
+            return json.dumps({'Response': '500- Internal Server Error'})
     else:
         return json.dumps({'Response': '400-Bad Request'})
 
