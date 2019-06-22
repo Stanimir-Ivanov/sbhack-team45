@@ -59,7 +59,7 @@ class PaymentManager:
         except:
             return False
 
-    def signup_provider(self, cost):
+    def signup_provider(self, cost, name):
         """
         Signs up a provider and set its ticket cost
         :param cost: the cost of his service
@@ -69,7 +69,7 @@ class PaymentManager:
             if self.utils.get_provider().isConnected():
                 self.utils.get_provider().eth.defaultAccount = \
                     Account.privateKeyToAccount(self.private_key).address
-                hash = self.contract.functions.providerSignUp(int(float(cost)*math.pow(10, 18)) ).transact()
+                hash = self.contract.functions.providerSignUp(int(float(cost)*math.pow(10, 18)), name).transact()
                 # Wait for transaction to be mined...
                 tx_json = json.dumps(
                     dict(
@@ -196,11 +196,17 @@ class PaymentManager:
                 self.utils.get_provider().eth.defaultAccount = \
                     Account.privateKeyToAccount(self.private_key).address
                 hash = self.contract.functions.userPayForTrip(to_provider).transact()
+
                 # Wait for transaction to be mined...
-                tx_json = json.dumps(
-                    dict(
+                provider_information = self.get_provider_data(to_provider)
+                transaction_information = dict(
                         self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                    ),
+                    )
+                transaction_information["companyName"] = provider_information[0].strip()
+                transaction_information["price"] = provider_information[1] / math.pow(10, 18)
+
+                tx_json = json.dumps(
+                    transaction_information,
                     cls=HexJsonEncoder
                 )
                 return tx_json
@@ -272,8 +278,16 @@ class PaymentManager:
         except:
             return False
 
-    def get_history(self):
-        return self.map[self.private_key]
+    def get_provider_data(self, provider_address):
+        try:
+            if self.utils.get_provider().isConnected():
+                self.utils.get_provider().eth.defaultAccount = \
+                    Account.privateKeyToAccount(self.private_key).address
+                return self.contract.functions.getProviderData(provider_address).call()
+            else:
+                raise Warning("Couldn't connect to the provider")
+        except:
+            return False
 
 
 class Utils:
@@ -352,8 +366,9 @@ def provider_sign_up():
     """
 
     cost = request.args.get('cost')
+    name = request.args.get('name')
     if cost is not None:
-        transaction = payment_manager_contract.signup_provider(cost)
+        transaction = payment_manager_contract.signup_provider(cost, name)
         if transaction is not None:
             return json.dumps({'Response': '200 - OK', 'Transaction': transaction})
         else:
