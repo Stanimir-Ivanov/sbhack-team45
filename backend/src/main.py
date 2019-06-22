@@ -8,11 +8,11 @@ from eth_account import Account
 
 
 class PaymentManager:
-    def __init__(self, provider, contract_source, contract_name, contract_address, private_key):
+    def __init__(self, provider, contract_interface, contract_address, private_key):
         super(PaymentManager, self).__init__()
 
         # Retrieves an interface to the contract
-        contract_interface = Utils.get_contract_interface(contract_source, contract_name)
+        # contract_interface = Utils.get_contract_interface(contract_source, contract_name)
         self.utils = Utils(provider=provider)
 
         # Makes sure the provider is reachable
@@ -86,7 +86,7 @@ class PaymentManager:
         except:
             return False
 
-    def withdraw(self, amount):
+    def withdraw_provider(self, amount):
         """
         Allows a provider to withdraw money
         :param amount: the amount to withdraw
@@ -95,6 +95,41 @@ class PaymentManager:
         try:
             if self.utils.get_provider().isConnected():
                 self.contract.functions.providerWithdraw(amount).call()
+                return True
+            else:
+                raise Warning("Couldn't connect to the provider")
+        except:
+            return False
+
+    def send_all_provider_balances(self):
+        """
+        Allows the contract owner to distribute all outstanding provider balances.
+        The calling address must be contract owner (i.e. the address that constructed the contract)
+        :param amount: the amount to withdraw
+        """
+
+        try:
+            if self.utils.get_provider().isConnected():
+                self.utils.get_provider().eth.defaultAccount = \
+                    Account.privateKeyToAccount(self.private_key).address
+                hash = self.contract.functions.sendAllProviderBalances().transact()
+                # Wait for transaction to be mined...
+                self.utils.get_provider().eth.waitForTransactionReceipt(hash)
+                return True
+            else:
+                raise Warning("Couldn't connect to the provider")
+        except:
+            return False
+
+    def withdraw_user(self, amount):
+        """
+        Allows a user to withdraw money
+        :param amount: the amount to withdraw
+        """
+        
+        try:
+            if self.utils.get_provider().isConnected():
+                self.contract.functions.userWithdraw(amount).call()
                 return True
             else:
                 raise Warning("Couldn't connect to the provider")
@@ -252,15 +287,15 @@ class Utils:
 #####################
 
 # Read contract source and instantiate a util object to interact with the contract
-with open('../../payment-manager/contracts/PaymentManager.sol', 'r') as file:
-    payment_manager = file.read()
+with open('../../payment-manager/build/contracts/PaymentManager.json', 'r') as json_file:
+    contract_interface = json.load(json_file)
 
 payment_manager_contract = PaymentManager(
-    provider='http://172.26.12.131:8545',
-    contract_source=payment_manager,
-    contract_name="PaymentManager",
-    contract_address="0xd248046634cAb7De1bF07aD49ceAFA0894AeDe79",
-    private_key="0x7864fd5e9c48c258cfc93972a2b8de72b617b897fa01b745bec32c380d67a7dc"
+    provider='http://127.0.0.1:7545',
+    contract_interface=contract_interface,
+    # contract_name="PaymentManager",
+    contract_address="0x9F69E1c70c0d3616d78A2386056a8D8615C4ad90",
+    private_key="fca1e2bfaff46a184e923a7db0937310cb267386f25b458c70c540fa7bc9472e"
 )
 
 ######################
@@ -312,11 +347,29 @@ def top_up():
         return json.dumps({'Response': '400-Bad Request'})
 
 
-@app.route('/api/withdraw')
-def withdraw():
+@app.route('/api/withdrawProvider')
+def withdraw_provider():
     amount = request.args.get('amount')
     if amount is not None:
-        if payment_manager_contract.withdraw(amount):
+        if payment_manager_contract.withdraw_provider(amount):
+            return json.dumps({'Response': '200 - OK'})
+        else:
+            return json.dumps({'Response': '500- Internal Server Error'})
+    else:
+        return json.dumps({'Response': '400-Bad Request'})
+
+@app.route('/api/sendAllProviderBalances')
+def send_all_provider_balances():    
+    if payment_manager_contract.send_all_provider_balances():
+        return json.dumps({'Response': '200 - OK'})
+    else:
+        return json.dumps({'Response': '500- Internal Server Error'})
+    
+@app.route('/api/withdrawUser')
+def withdraw_user():
+    amount = request.args.get('amount')
+    if amount is not None:
+        if payment_manager_contract.withdraw_user(amount):
             return json.dumps({'Response': '200 - OK'})
         else:
             return json.dumps({'Response': '500- Internal Server Error'})
