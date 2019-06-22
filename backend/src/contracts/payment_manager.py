@@ -93,28 +93,28 @@ class PaymentManager:
         except:
             raise Warning("Oups. Something went wrong")
 
-    def get_balance_user(self, user_address):
+    def get_balance_user(self):
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getUserBalance(user_address).call()
+                return self.contract.functions.getUserBalance().call()
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
             raise Warning("Oups. Something went wrong")
 
-    def get_balance_provider(self, provider_address):
+    def get_balance_provider(self):
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getProviderBalance(provider_address).call()
+                return self.contract.functions.getProviderBalance().call()
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
             raise Warning("Oups. Something went wrong")
 
-    def get_cost_provider(self, provider_address):
+    def get_cost_provider(self):
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getProviderCost(provider_address).call()
+                return self.contract.functions.getProviderCost().call()
             else:
                 raise Warning("Couldn't connect to the provider")
         except:

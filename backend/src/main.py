@@ -16,8 +16,8 @@ payment_manager_contract = PaymentManager(
     provider='http://3.120.6.183:8545',
     contract_source=payment_manager,
     contract_name="PaymentManager",
-    contract_address="0xd452931B197DbbB3c43449d79af70935f4392184",
-    private_key="0xcfdb0d6051e83a4c1526f391a86db05b274ff0e5e7617f20fc9f35730fc36435"
+    contract_address="0xd248046634cAb7De1bF07aD49ceAFA0894AeDe79",
+    private_key="0x7864fd5e9c48c258cfc93972a2b8de72b617b897fa01b745bec32c380d67a7dc"
 )
 
 ######################
@@ -71,29 +71,17 @@ def pay():
 
 @app.route('/api/getBalanceUser')
 def get_balance_user():
-    addr = request.args.get('addr')
-    if addr is not None:
-        return payment_manager_contract.get_balance_user(addr)
-    else:
-        return "404 - Error - Not found: bad GET parameter"
+    return str(payment_manager_contract.get_balance_user())
 
 
 @app.route('/api/getBalanceProvider')
 def get_balance_provider():
-    addr = request.args.get('addr')
-    if addr is not None:
-        return payment_manager_contract.get_balance_provider(addr)
-    else:
-        return "404 - Error - Not found: bad GET parameter"
+    return payment_manager_contract.get_balance_provider()
 
 
 @app.route('/api/getCostProvider')
 def get_cost_provider():
-    addr = request.args.get('addr')
-    if addr is not None:
-        return payment_manager_contract.get_cost_provider(addr)
-    else:
-        return "404 - Error - Not found: bad GET parameter"
+    return payment_manager_contract.get_cost_provider()
 
 
 @app.route('/api/setCostProvider')
