@@ -1,4 +1,4 @@
-pragma solidity 0.5.8;
+pragma solidity 0.5.9;
 
 contract PaymentManager {
 
@@ -44,21 +44,25 @@ contract PaymentManager {
 
     }
 
+    // Adding user's address to global array
     function userSignup() public userNotSignedUp(msg.sender) {
         usersData[msg.sender].referenceAddress = msg.sender;
         usersData[msg.sender].balance = 0;
     }
 
+    // Same but for the provider
     function providerSignUp(uint256 cost) public providerNotSignedUp(msg.sender)  {
         providersData[msg.sender].referenceAddress = msg.sender;
         providersData[msg.sender].balance = 0;
         providersData[msg.sender].cost = cost;
     }
     
+    // Top up
     function userTopUp() public payable userSignedUp(msg.sender) {
         usersData[msg.sender].balance += msg.value;
     }
 
+    // Provider gets his money
     function providerWithdraw(uint256 value) public providerSignedUp(msg.sender)  payable {
         if(providersData[msg.sender].balance >= value){
             providersData[msg.sender].balance -= value;
@@ -66,9 +70,28 @@ contract PaymentManager {
         }
     }
 
+    // Update the balances for both users and providers
     function userPayForTrip(address providerAddress) public userSignedUp(msg.sender) providerSignedUp(providerAddress) {
         providersData[providerAddress].balance += providersData[providerAddress].cost;
         usersData[msg.sender].balance -= providersData[providerAddress].cost;
     }
+
+    function getUserBalance(address userAddress) public userSignedUp(userAddress) {
+        return usersData[userAddress].balance;
+    }
+
+    function getProviderBalance(address providerAddress) public providerSignedUp(providerAddress) {
+        return providersData[providerAddress].balance;
+    }
+
+    function setProviderCost(uint256 cost) public providerSignedUp(msg.sender) {
+        providersData[msg.sender].cost = cost;
+    }
+
+    function getProviderCost(address providerAddress) public providerSignedUp(providerAddress) {
+        return providersData[providerAddress].cost;
+    }
+
+
 
 }
