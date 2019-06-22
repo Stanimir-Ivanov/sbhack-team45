@@ -163,7 +163,7 @@ class PaymentManager:
 
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getUserBalance().call() // math.pow(10, 18)
+                return self.contract.functions.getUserBalance().call() / math.pow(10, 18)
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -176,7 +176,7 @@ class PaymentManager:
 
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getProviderBalance().call() // math.pow(10, 18)
+                return self.contract.functions.getProviderBalance().call() / math.pow(10, 18)
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -208,7 +208,7 @@ class PaymentManager:
                 hash = self.contract.functions.setProviderCost(cost).transact()
                 # Wait for transaction to be mined...
                 self.utils.get_provider().eth.waitForTransactionReceipt(hash)
-                return ""
+                return True
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
