@@ -1,5 +1,5 @@
 import json
-
+import math
 from flask import Flask, request
 from solc import compile_standard
 from web3 import Web3
@@ -78,7 +78,7 @@ class PaymentManager:
                 self.contract.functions.userTopUp().transact(
                     {
                         'from': self.utils.get_provider().eth.defaultAccount,
-                        'value': w3.fromWei(amount, 'ether')
+                        'value': int(float(amount)*math.pow(10, 18))  # Converts to wei
                     }
                 )
                 return True
@@ -163,7 +163,7 @@ class PaymentManager:
 
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getUserBalance().call()
+                return self.contract.functions.getUserBalance().call() // math.pow(10, 18)
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
@@ -176,7 +176,7 @@ class PaymentManager:
 
         try:
             if self.utils.get_provider().isConnected():
-                return self.contract.functions.getProviderBalance().call()
+                return self.contract.functions.getProviderBalance().call() // math.pow(10, 18)
             else:
                 raise Warning("Couldn't connect to the provider")
         except:
