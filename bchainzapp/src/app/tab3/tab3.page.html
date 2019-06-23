@@ -8,14 +8,14 @@
         <ion-col>
           <ion-button (click)="deposit = true;" fill="clear" color="{{!deposit ? 'secondary' : ''}}" expand="full"
             [style.fontWeight]="deposit ? 'bold' : 'normal'">
-            Deposit
+            <span style="font-variant-caps: small-caps">Deposit</span>
           </ion-button>
         </ion-col>
         <ion-col>
 
           <ion-button (click)="deposit = false;" fill="clear" expand="full" color="{{!deposit ? '' : 'secondary'}}"
             [style.fontWeight]="!deposit ? 'bold' : 'normal'">
-            Withdraw
+            <span style="font-variant-caps: small-caps">Withdraw</span>
           </ion-button>
         </ion-col>
       </ion-row>
@@ -36,7 +36,7 @@
             </ion-textarea>
           </p>
           <div style="display: flex; justify-content: center;">
-            <img src="assets/qr.png" style="width: 200px">
+            <img src="assets/qr.png" style="width: 200px; height: 200px;">
           </div>
         </ion-card-content>
       </ion-card>
