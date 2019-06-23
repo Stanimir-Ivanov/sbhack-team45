@@ -24,4 +24,12 @@ export class Tab3Page {
 
   }
 
+  withdraw(){
+    this.http.get<any>('http://3.120.6.183:5000/api/withdrawUser?amount='+String(this.amount)).subscribe(r1 => {
+      if (r1.Response != '200') {
+        console.log('Something happened, please try again later')
+      }
+    });
+  }
+
 }

@@ -7,15 +7,15 @@
       <ion-row>
         <ion-col>
           <ion-button (click)="deposit = true;" fill="clear" color="{{!deposit ? 'secondary' : ''}}" expand="full"
-            [style.fontWeight]="deposit ? 'bold' : 'normal'" >
-            <span style="font-variant-caps: small-caps">Deposit</span>
+            [style.fontWeight]="deposit ? 'bold' : 'normal'">
+            Deposit
           </ion-button>
         </ion-col>
         <ion-col>
 
           <ion-button (click)="deposit = false;" fill="clear" expand="full" color="{{!deposit ? '' : 'secondary'}}"
             [style.fontWeight]="!deposit ? 'bold' : 'normal'">
-            <span style="font-variant-caps: small-caps">Withdraw</span>
+            Withdraw
           </ion-button>
         </ion-col>
       </ion-row>
@@ -28,14 +28,14 @@
     <div *ngIf="deposit">
       <ion-card>
         <ion-card-content>
-          <p style="text-align: center">
+          <p>
             Deposit to the address</p>
           <p>
             <ion-textarea disabled value="0x1093fc997da3728539cbaa767ae1a28ad4fce32e">
 
             </ion-textarea>
           </p>
-          <div style="display: flex; justify-content: center;">
+          <div>
             <img src="assets/qr.png" style="width: 200px">
           </div>
         </ion-card-content>
@@ -44,22 +44,22 @@
     <div *ngIf="!deposit">
       <ion-list>
         <ion-item>
-            <ion-note slot="start" style="color: white">Address</ion-note>
+            <ion-note slot="start">Address</ion-note>
           
           <ion-input placeholder="0x..."></ion-input>
 
         </ion-item>
         <ion-item>
-            <ion-note slot="start" style="color: white">ETH</ion-note>
+            <ion-note slot="start">ETH</ion-note>
           <ion-input placeholder="Amount" type="number" [(ngModel)]="amount"></ion-input>
 
         </ion-item>
         <ion-item>
-            <ion-note slot="start" style="color: white">CHF</ion-note>
+            <ion-note slot="start">USD</ion-note>
           {{ amount * 312.5 }}
           </ion-item>
       </ion-list>
-      <ion-button expand="block" style="color: #333">Confirm Withdrawal</ion-button>
+      <ion-button (click)="withdraw()" expand="block" style="color: #333">Confirm Withdrawal</ion-button>
 
     </div>
   </div>
